@@ -2,7 +2,7 @@
 # mic-apps -- list the applications currently capturing a real microphone.
 #
 # Prints a JSON array of { label, source, raw } on stdout:
-#   label  - a friendly application name (e.g. "codex-voice-host")
+#   label  - a friendly application name (e.g. "Chrome", "codex-voice-host")
 #   source - the PipeWire source node the stream is capturing from
 #   raw    - the raw application.name reported by PipeWire
 #
@@ -27,7 +27,10 @@ jq -cn --argjson sources "$sources_json" --argjson streams "$streams_json" '
           | sub("^PipeWire ALSA \\["; "")
           | sub("^ALSA plug-in \\["; "")
           | sub("\\]$"; "")
-          | sub("^PulseAudio "; "")) as $label
+          | sub("^PulseAudio "; "")) as $stripped
+      | (if ($stripped | test("^Google Chrome")) then "Chrome"
+         elif ($stripped | test("^Chromium")) then "Chromium"
+         else $stripped end) as $label
       | { label: $label, source: $src, raw: $raw }
     )
   | unique_by(.label)
