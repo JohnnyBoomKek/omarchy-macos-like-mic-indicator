@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "johnnyboomkek.macos-mic-indicator",
+  "name": "macOS-like Microphone Indicator",
+  "version": "1.0.0",
+  "author": "JohnnyBoomKek",
+  "license": "MIT",
+  "description": "macOS-style microphone indicator for the Omarchy bar: highlights when an app is using the mic and shows which app it is.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "MicIndicator.qml"
+  },
+  "barWidget": {
+    "displayName": "Microphone Indicator",
+    "description": "Shows when and which application is capturing the microphone.",
+    "category": "Audio",
+    "aliases": [
+      "microphone",
+      "mic-indicator",
+      "macos-mic"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

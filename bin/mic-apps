@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# mic-apps -- list the applications currently capturing a real microphone.
+#
+# Prints a JSON array of { label, source, raw } on stdout:
+#   label  - a friendly application name (e.g. "codex-voice-host")
+#   source - the PipeWire source node the stream is capturing from
+#   raw    - the raw application.name reported by PipeWire
+#
+# Output-monitor (.monitor) sources are excluded (those are loopback captures
+# of the speakers, not the microphone) and corked/idle streams are skipped.
+set -euo pipefail
+
+sources_json="$(pactl --format=json list sources 2>/dev/null || printf '[]')"
+streams_json="$(pactl --format=json list source-outputs 2>/dev/null || printf '[]')"
+
+jq -cn --argjson sources "$sources_json" --argjson streams "$streams_json" '
+  ($sources | map({key: (.index | tostring), value: (.name // "")}) | from_entries) as $names
+  | $streams
+  | map(
+      . as $s
+      | ($names[($s.source | tostring)] // "") as $src
+      | select(($src | endswith(".monitor")) | not)
+      | select($s.corked != true)
+      | ($s.properties // {}) as $p
+      | ($p["application.name"] // $p["application.process.binary"] // $p["node.name"] // "Unknown") as $raw
+      | ($raw
+          | sub("^PipeWire ALSA \\["; "")
+          | sub("^ALSA plug-in \\["; "")
+          | sub("\\]$"; "")
+          | sub("^PulseAudio "; "")) as $label
+      | { label: $label, source: $src, raw: $raw }
+    )
+  | unique_by(.label)
+'
